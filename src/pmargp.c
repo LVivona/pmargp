@@ -1,10 +1,9 @@
+#include "pmargp.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <ctype.h>
-#include "pmargp.h"
 
-static bool inline is_help(const char *flag) {
+static inline bool  is_help(const char *flag) {
     return strcmp(flag, "--help") == 0 || strcmp(flag, "-h") == 0;
 }
 
@@ -125,7 +124,6 @@ static void help(struct parser_va *parser) {
                 case CHAR: printf("[Default: %s]", (char *)arg->value_ptr ); break;
                 default: break;
             }
-            printf("");
         }
         printf("\n");
     }
