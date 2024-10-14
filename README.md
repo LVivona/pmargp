@@ -1,5 +1,8 @@
 # Poor Man's Argument Parser (argp)
 
+
+![example workflow](https://github.com/LVivona/pmargp/actions/workflows/c-cpp.yml/badge.svg)
+
 ## Overview
 
 **Poor Man's Argument Parser** (`argp`) is a simple, lightweight C library for handling command-line arguments. It allows easy parsing of various argument types such as integers, floats, strings, and files. Designed with minimal overhead, it is ideal for small-to-medium-sized C applications that require flexible command-line argument parsing without the need for large dependencies.
