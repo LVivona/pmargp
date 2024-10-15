@@ -29,7 +29,7 @@ bool run_test_group(const char *group_name, TestFunction *tests, const char **te
 }
 
 bool test_basic_parsing() {
-    struct parser_va parser;
+    struct pmargp_parser_t parser;
     parser_start(&parser);
 
 
@@ -53,7 +53,7 @@ bool test_basic_parsing() {
 }
 
 bool test_missing_required_arguments() {
-    struct parser_va parser;
+    struct pmargp_parser_t parser;
     parser_start(&parser);
 
     // Add required and optional arguments
@@ -75,7 +75,7 @@ bool test_missing_required_arguments() {
 
 bool test_default_values() {
 
-    struct parser_va parser;
+    struct pmargp_parser_t parser;
     parser_start(&parser);
 
     int default_int = 10;
@@ -100,7 +100,7 @@ bool test_default_values() {
 
 
 bool test_argument_overlap() {
-    struct parser_va parser;
+    struct pmargp_parser_t parser;
     parser_start(&parser);
 
     int default_num = 69;
@@ -122,7 +122,7 @@ bool test_argument_overlap() {
 }
 
 bool test_multiple_strings() {
-    struct parser_va parser;
+    struct pmargp_parser_t parser;
     parser_start(&parser);
 
     char *arg1;
@@ -142,7 +142,7 @@ bool test_multiple_strings() {
 }
 
 bool test_boolean_flags() {
-    struct parser_va parser;
+    struct pmargp_parser_t parser;
     parser_start(&parser);
 
     bool b = false;
@@ -160,7 +160,7 @@ bool test_boolean_flags() {
 
 
 bool test_missing_optional_arguments() {
-    struct parser_va parser;
+    struct pmargp_parser_t parser;
     parser_start(&parser);
     char *o = "";
     parser.add_argument(&parser, "-o", "--optional", PMARGP_STRING, &o, "Optional argument", false);
@@ -174,7 +174,7 @@ bool test_missing_optional_arguments() {
 
 
 bool test_invalid_argument() {
-    struct parser_va parser;
+    struct pmargp_parser_t parser;
     parser_start(&parser);
     // No arguments are added to the parser
 
@@ -189,7 +189,7 @@ bool test_invalid_argument() {
 
 
 bool test_unrecognized_short_key() {
-    struct parser_va parser;
+    struct pmargp_parser_t parser;
     parser_start(&parser);
 
     char *arg1;
@@ -207,7 +207,7 @@ bool test_unrecognized_short_key() {
 
 
 bool test_argument_aliases() {
-    struct parser_va parser;
+    struct pmargp_parser_t parser;
     parser_start(&parser);
 
     // Add an argument with an alias
@@ -230,7 +230,7 @@ bool test_argument_aliases() {
 int main(int argc, char *argv[]) {
     
     printf("1.Start program\n");
-    struct parser_va args;
+    struct pmargp_parser_t args;
     parser_start(&args);
     printf("2.Create Parser\n");
     

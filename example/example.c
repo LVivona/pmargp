@@ -5,7 +5,7 @@
 #include "../src/pmargp.h"
 
 int main(int argc, char *argv[]) {
-    struct parser_va parser;
+    struct pmargp_parser_t parser;
     parser_start(&parser);
 
     // Set program name and description
