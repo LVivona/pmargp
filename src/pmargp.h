@@ -1,5 +1,13 @@
-/**
- * @name Poor man's argument parser (argp)
+/******************************************************************************************
+ * 
+ * Project
+ *                              ▗▄▄▖ ▗▖  ▗▖ ▗▄▖ ▗▄▄▖  ▗▄▄▖▗▄▄▖ 
+ *                              ▐▌ ▐▌▐▛▚▞▜▌▐▌ ▐▌▐▌ ▐▌▐▌   ▐▌ ▐▌
+ *                              ▐▛▀▘ ▐▌  ▐▌▐▛▀▜▌▐▛▀▚▖▐▌▝▜▌▐▛▀▘ 
+ *                              ▐▌   ▐▌  ▐▌▐▌ ▐▌▐▌ ▐▌▝▚▄▞▘▐▌   
+
+ * 
+ * @name Poor man's argument parser (pmargp)
  * @author Luca Vivona
  * 
  * MIT License
@@ -22,7 +30,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
- */
+ ******************************************************************************************/
 
 #ifndef PMARGP_H
 #define PMARGP_H
