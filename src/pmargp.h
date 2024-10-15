@@ -73,7 +73,7 @@ typedef enum {
 
 
 /**
- * @brief Structure representing the argument parser.
+ * @brief Structure representing a command-line argument.
  */
 typedef struct pmargp_argument_t
 {
@@ -92,7 +92,7 @@ typedef struct pmargp_argument_t
  */
 typedef struct pmargp_parser_t pmargp_parser_t;
 
-struct parser_va
+struct pmargp_parser_t
 {
     const char *name;        ///< Name of the program
     const char *description; ///< Description of the program
@@ -105,7 +105,7 @@ struct parser_va
      * @param key Key of the argument to find.
      * @return Pointer to the found pmargp_argument_t, or NULL if not found.
      */
-    pmargp_argument_t *(*get_argument)(struct parser_va *parser, const char *key);
+    pmargp_argument_t *(*get_argument)(struct pmargp_parser_t *parser, const char *key);
 
     /**
      * @brief Get the index of an argument by its key.
@@ -113,7 +113,7 @@ struct parser_va
      * @param key Key of the argument to find.
      * @return Index of the argument, or -1 if not found.
      */
-    int (*get_argument_index)(struct parser_va *parser, const char *key);
+    int (*get_argument_index)(struct pmargp_parser_t *parser, const char *key);
 
     /**
      * @brief Add a new argument to the parser.
@@ -126,7 +126,7 @@ struct parser_va
      * @param required Whether the argument is required.
      * @return true if the argument was added successfully, false otherwise.
      */
-    bool (*add_argument)(struct parser_va *parser, const char *short_key, const char *key,
+    bool (*add_argument)(struct pmargp_parser_t *parser, const char *short_key, const char *key,
                          pmargp_type_t type, void *value_ptr, char *description, bool required);
 
     /**
@@ -136,21 +136,21 @@ struct parser_va
      * @param argv Array of command-line argument strings.
      * @return true if parsing was successful, false otherwise.
      */
-    int (*parses)(struct parser_va *parser, int argc, char *argv[]);
+    int (*parses)(struct pmargp_parser_t *parser, int argc, char *argv[]);
 
-} parser_va;
+};
 
 /**
  * @brief Initialize the parser structure.
  * @param parser Pointer to the parser structure to initialize.
  */
-void parser_start(struct parser_va *parser);
+void parser_start(struct pmargp_parser_t *parser);
 
 /**
  * @brief Free resources allocated by the parser.
  * @param parser Pointer to the parser structure to free.
  */
-void free_parser(struct parser_va *parser);
+void free_parser(struct pmargp_parser_t *parser);
 
 #ifdef __cplusplus
 }

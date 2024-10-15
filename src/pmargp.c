@@ -7,7 +7,7 @@ static inline bool  is_help(const char *flag) {
     return strcmp(flag, "--help") == 0 || strcmp(flag, "-h") == 0;
 }
 
-pmargp_argument_t *get_argument(struct parser_va* parser, const char *key) {
+pmargp_argument_t *get_argument(struct pmargp_parser_t* parser, const char *key) {
     for (int i = 0; i < parser->argc; i++) {
         if (strcmp(parser->args[i].key, key) == 0 || 
             (parser->args[i].short_key && strcmp(parser->args[i].short_key, key) == 0)) {
@@ -18,7 +18,7 @@ pmargp_argument_t *get_argument(struct parser_va* parser, const char *key) {
 }
 
 
-int get_argument_index(struct parser_va* parser, const char *key) {
+int get_argument_index(struct pmargp_parser_t* parser, const char *key) {
     for (int i = 0; i < parser->argc; i++) {
         if (strcmp(parser->args[i].key, key) == 0 ||
             (parser->args[i].short_key && strcmp(parser->args[i].short_key, key) == 0)) {
@@ -28,7 +28,7 @@ int get_argument_index(struct parser_va* parser, const char *key) {
     return -1;
 }
 
-bool add_argument(struct parser_va* parser, const char* restrict short_key, const char* restrict key, 
+bool add_argument(struct pmargp_parser_t* parser, const char* restrict short_key, const char* restrict key, 
                   pmargp_type_t type, void* value_ptr, char *description, bool required) {
     if (key == NULL || parser == NULL) return false;
     if (get_argument_index(parser, key) >= 0 || (short_key && get_argument_index(parser, short_key) >= 0)) return false;
@@ -92,7 +92,7 @@ static const char* type_to_token(pmargp_type_t type) {
     return (type >= 0 && type <= PMARGP_B_RW_FILE) ? type_tokens[type] : "";
 }
 
-static void help(struct parser_va *parser) {
+static void help(struct pmargp_parser_t *parser) {
     printf("\n%s\n", parser->name ? parser->name : "Program Name");
     printf("%s\n\n", parser->description ? parser->description : "No description provided.");
     printf("Usage: %s [OPTIONS]\n\n", parser->name ? parser->name : "program");
@@ -144,7 +144,7 @@ static const char *get_file_mode(pmargp_type_t type) {
     }
 }
 
-int parses(struct parser_va* parser, int argc, char* argv[]) {
+int parses(struct pmargp_parser_t* parser, int argc, char* argv[]) {
     if (parser->argc == 0) return false;
     if (help_info(argc, argv)) {
         help(parser);
@@ -211,7 +211,7 @@ int parses(struct parser_va* parser, int argc, char* argv[]) {
     return PMARGP_SUCCESS;
 }
 
-void parser_start(struct parser_va *parser) {
+void parser_start(struct pmargp_parser_t *parser) {
     if (parser) {
         parser->argc = 0;
         parser->args = NULL;
@@ -224,7 +224,7 @@ void parser_start(struct parser_va *parser) {
     }
 }
 
-void free_parser(struct parser_va *parser) {
+void free_parser(struct pmargp_parser_t *parser) {
     if (!parser) return;
 
     for (int j = 0; j < parser->argc; j++) {
