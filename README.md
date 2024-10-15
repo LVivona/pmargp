@@ -101,12 +101,13 @@ int main(int argc, char *argv[]) {
     FILE *output = stdout;
     char character;
 
-    parser.add_argument(&parser, "-n", "--name", STRING, &name, "Your name", true);
-    parser.add_argument(&parser, "-c", "--count", INT, &count, "Number of greetings", false);
-    parser.add_argument(&parser, "-v", "--value", FLOAT, &value, "A floating-point value", false);
-    parser.add_argument(&parser, "-q", "--quiet", BOOL, &quiet, "Run in quiet mode", false);
-    parser.add_argument(&parser, "-o", "--output", W_FILE, &output, "Output file", false);
-    parser.add_argument(&parser, "-r", "--character", CHAR, &character, "random character", false);
+    parser.add_argument(&parser, "-n", "--name", PMARGP_STRING, &name, "Your name", true);
+    parser.add_argument(&parser, "-c", "--count", PMARGP_INT, &count, "Number of greetings", false);
+    parser.add_argument(&parser, "-v", "--value", PMARGP_FLOAT, &value, "A floating-point value", false);
+    parser.add_argument(&parser, "-q", "--quiet", PMARGP_BOOL, &quiet, "Run in quiet mode", false);
+    parser.add_argument(&parser, "-o", "--output", PMARGP_W_FILE, &output, "Output file", false);
+    parser.add_argument(&parser, "-r", "--character", PMARGP_CHAR, &character, "random character", false);
+
 
 
     // Parse arguments
