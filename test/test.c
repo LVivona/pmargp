@@ -7,19 +7,25 @@
 
 typedef bool (*TestFunction)();
 
-char version[] = "0.0.1"; 
+char version[] = "0.1.0"; 
 
-void run_test(const char *test_name, TestFunction fn) {
+bool run_test(const char *test_name, TestFunction fn) {
     bool result = fn();
     printf("\r%s Complete... %s: %s\n", result ? "✅" : "❌",  test_name, result ? "PASSED" : "FAILED");
+    return result;
 }
 
-void run_test_group(const char *group_name, TestFunction *tests, const char **test_names, size_t count) {
+bool run_test_group(const char *group_name, TestFunction *tests, const char **test_names, size_t count) {
     printf("\n=== Running Test Group: %s ===\n", group_name);
+    bool result = true;
     for (size_t i = 0; i < count; ++i) {
-        run_test(test_names[i], tests[i]);
+        bool test_result = run_test(test_names[i], tests[i]);
+        if (test_result == false){
+            result = test_result;
+        }
     }
     printf("=============================\n");
+    return result;
 }
 
 bool test_basic_parsing() {
@@ -31,10 +37,10 @@ bool test_basic_parsing() {
     float _float;
     char * _str;
     bool _bool;
-    parser.add_argument(&parser, "-s", "--string", STRING, &_str, "String argument", false);
-    parser.add_argument(&parser, "-i", "--int", INT, &_int, "Integer argument", false);
-    parser.add_argument(&parser, "-f", "--float", FLOAT, &_float, "Float argument", false);
-    parser.add_argument(&parser, "-b", "--bool", BOOL, &_bool, "Boolean argument", false);
+    parser.add_argument(&parser, "-s", "--string", PMARGP_STRING, &_str, "String argument", false);
+    parser.add_argument(&parser, "-i", "--int", PMARGP_INT, &_int, "Integer argument", false);
+    parser.add_argument(&parser, "-f", "--float", PMARGP_FLOAT, &_float, "Float argument", false);
+    parser.add_argument(&parser, "-b", "--bool", PMARGP_BOOL, &_bool, "Boolean argument", false);
 
     char *argv[] = {"program", "--string", "hello", "--int", "42", "--float", "3.14", "--bool"};
     int argc = sizeof(argv) / sizeof(argv[0]);
@@ -53,17 +59,17 @@ bool test_missing_required_arguments() {
     // Add required and optional arguments
     int i;
     char *s;
-    parser.add_argument(&parser, "-r", "--required", INT, &i, "Required integer argument", true);
-    parser.add_argument(&parser, "-o", "--optional", STRING, &s, "Optional string argument", false);
+    parser.add_argument(&parser, "-r", "--required", PMARGP_INT, &i, "Required integer argument", true);
+    parser.add_argument(&parser, "-o", "--optional", PMARGP_STRING, &s, "Optional string argument", false);
 
     // Simulate command-line input without the required argument
     char *argv[] = {"program", "--optional", "test"};
     int argc = sizeof(argv) / sizeof(argv[0]);
 
-    bool result = parser.parses(&parser, argc, argv);
+    int result = parser.parses(&parser, argc, argv) == PMARGP_ERR_ARG_MISSING;
     free_parser(&parser);
     // Expect false since a required argument is missing
-    return !result;
+    return result;
 }
 
 
@@ -73,7 +79,7 @@ bool test_default_values() {
     parser_start(&parser);
 
     int default_int = 10;
-    parser.add_argument(&parser, "-i", "--int", INT, &default_int, "Integer argument with default", false);
+    parser.add_argument(&parser, "-i", "--int", PMARGP_INT, &default_int, "Integer argument with default", false);
 
     // Simulate command-line input without providing the argument
     char *argv[] = {"program"};
@@ -81,7 +87,7 @@ bool test_default_values() {
 
     bool result = parser.parses(&parser, argc, argv);
 
-    Argument_t *_int_arg = parser.get_argument(&parser, "-i");
+    pmargp_argument_t *_int_arg = parser.get_argument(&parser, "-i");
 
     // Check if the default value is correctly set
     
@@ -98,7 +104,7 @@ bool test_argument_overlap() {
     parser_start(&parser);
 
     int default_num = 69;
-    parser.add_argument(&parser, "-n", "--number", INT, &default_num, "Number argument", false);
+    parser.add_argument(&parser, "-n", "--number", PMARGP_INT, &default_num, "Number argument", false);
 
     // Simulate command-line input with both short and long keys
     char *argv[] = {"program", "-n", "42", "--number", "100"};
@@ -121,8 +127,8 @@ bool test_multiple_strings() {
 
     char *arg1;
     char *arg2;
-    parser.add_argument(&parser, "-a", "--arg1", STRING, &arg1, "First string argument", false);
-    parser.add_argument(&parser, "-b", "--arg2", STRING, &arg2, "Second string argument", false);
+    parser.add_argument(&parser, "-a", "--arg1", PMARGP_STRING, &arg1, "First string argument", false);
+    parser.add_argument(&parser, "-b", "--arg2", PMARGP_STRING, &arg2, "Second string argument", false);
 
     char *argv[] = {"program", "--arg1", "hello", "--arg2", "world"};
     int argc = sizeof(argv) / sizeof(argv[0]);
@@ -140,7 +146,7 @@ bool test_boolean_flags() {
     parser_start(&parser);
 
     bool b = false;
-    parser.add_argument(&parser, "-f", "--flag", BOOL, &b, "Boolean flag", false);
+    parser.add_argument(&parser, "-f", "--flag", PMARGP_BOOL, &b, "Boolean flag", false);
 
     char *argv[] = {"program"};
     int argc = sizeof(argv) / sizeof(argv[0]);
@@ -157,7 +163,7 @@ bool test_missing_optional_arguments() {
     struct parser_va parser;
     parser_start(&parser);
     char *o = "";
-    parser.add_argument(&parser, "-o", "--optional", STRING, &o, "Optional argument", false);
+    parser.add_argument(&parser, "-o", "--optional", PMARGP_STRING, &o, "Optional argument", false);
 
     char *argv[] = {"program"};
     bool result = parser.parses(&parser, 1, argv);
@@ -188,15 +194,15 @@ bool test_unrecognized_short_key() {
 
     char *arg1;
     // Add some arguments
-    parser.add_argument(&parser, "-a", "--arg", STRING, &arg1, "Test argument", true);
+    parser.add_argument(&parser, "-a", "--arg", PMARGP_STRING, &arg1, "Test argument", true);
 
     char *argv[] = {"program", "-x", "value"};
     int argc = sizeof(argv) / sizeof(argv[0]);
 
-    bool result = parser.parses(&parser, argc, argv);
+    int result = parser.parses(&parser, argc, argv) == PMARGP_ERR_ARG_MISSING;
     free_parser(&parser);
 
-    return !result; // Expect the result to be false due to unrecognized short key
+    return result; // Expect the result to be false due to unrecognized short key
 }
 
 
@@ -206,7 +212,7 @@ bool test_argument_aliases() {
 
     // Add an argument with an alias
     bool b;
-    parser.add_argument(&parser, "-v", "--verbose", BOOL, &b, "Verbose output", false);
+    parser.add_argument(&parser, "-v", "--verbose", PMARGP_BOOL, &b, "Verbose output", false);
 
     char *argv[] = {"program", "-v"};
     int argc = sizeof(argv) / sizeof(argv[0]);
@@ -232,9 +238,9 @@ int main(int argc, char *argv[]) {
 
     bool name;
     bool all;
-    if (args.add_argument(&args, "-a", "--all", BOOL, &all, "boolean type that runs all test(s)", false) == false) return EXIT_FAILURE;
+    if (args.add_argument(&args, "-a", "--all", PMARGP_BOOL, &all, "boolean type that runs all test(s)", false) == false) return EXIT_FAILURE;
     printf("4.Add argument 1\n");
-    if (args.add_argument(&args, "-n", "--names", BOOL, &name, "name of all the test(s)", false) == false) return EXIT_FAILURE;
+    if (args.add_argument(&args, "-n", "--names", PMARGP_BOOL, &name, "name of all the test(s)", false) == false) return EXIT_FAILURE;
     printf("5.Add argument 2\n");
 
     if (args.parses(&args, argc, argv) == false) {
@@ -279,10 +285,13 @@ int main(int argc, char *argv[]) {
     };
 
     // Run tests based on input
+    bool result = true;
+    printf("7. run\n");
     if (all) {
-        run_test_group("Basic Tests", basic_tests, basic_test_names, sizeof(basic_tests) / sizeof(basic_tests[0]));
-        run_test_group("Error Handling Tests", error_handling_tests, error_handling_test_names, sizeof(error_handling_tests) / sizeof(error_handling_tests[0]));
-        run_test_group("Boolean Flag Tests", boolean_tests, boolean_test_names, sizeof(boolean_tests) / sizeof(boolean_tests[0]));
+        result &= run_test_group("Basic Tests", basic_tests, basic_test_names, sizeof(basic_tests) / sizeof(basic_tests[0]));
+        result &= run_test_group("Error Handling Tests", error_handling_tests, error_handling_test_names, sizeof(error_handling_tests) / sizeof(error_handling_tests[0]));
+        result &= run_test_group("Boolean Flag Tests", boolean_tests, boolean_test_names, sizeof(boolean_tests) / sizeof(boolean_tests[0]));
+        
     } else if (name) {
         printf("Available Test Names:\n");
         for (int i = 0; i < (int)(sizeof(basic_test_names) / sizeof(basic_test_names[0])); ++i) {
@@ -296,7 +305,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+
     free_parser(&args);
     printf("== END ==\n");
-    return 0;
+    return result ? EXIT_SUCCESS : EXIT_FAILURE;
 }
