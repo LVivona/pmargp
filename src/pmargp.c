@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
+#include <limits.h>
 
 static inline bool  is_help(const char *flag) {
     return strcmp(flag, "--help") == 0 || strcmp(flag, "-h") == 0;
@@ -145,7 +147,7 @@ static const char *get_file_mode(pmargp_type_t type) {
 }
 
 int parses(struct pmargp_parser_t* parser, int argc, char* argv[]) {
-    if (parser->argc == 0) return false;
+    if (parser->argc == 0) return PMARGP_ERR_NO_ARGUMENTS;
     if (help_info(argc, argv)) {
         help(parser);
         exit(EXIT_SUCCESS);
@@ -163,16 +165,17 @@ int parses(struct pmargp_parser_t* parser, int argc, char* argv[]) {
             arg->allocated = true;
         } else if (i + 1 < argc) {
             switch (arg->type) {
+                errno = 0;
                 case PMARGP_CHAR:
                     *(char*)arg->value_ptr = *argv[++i];  // Store the first character into the pointer to char
                     break;
                 case PMARGP_STRING:
                     *(char**)arg->value_ptr = strdup(argv[++i]);
                     break;
-                case PMARGP_FLOAT:
+                case PMARGP_FLOAT: 
                     *(float*)arg->value_ptr = atof(argv[++i]);
                     break;
-                case PMARGP_INT:
+                case PMARGP_INT: 
                     *(int*)arg->value_ptr = atoi(argv[++i]);
                     break;
                 case PMARGP_R_FILE:
@@ -196,6 +199,9 @@ int parses(struct pmargp_parser_t* parser, int argc, char* argv[]) {
                     return PMARGP_ERR_UNKNOWN_TYPE;
             }
             arg->allocated = true;
+            if(errno == ERANGE){
+                return PMARGP_ERR_OVERFLOW;
+            }
         }
     }
 

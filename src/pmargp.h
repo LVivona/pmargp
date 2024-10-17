@@ -61,6 +61,9 @@ extern "C" {
 #define PMARGP_ERR_FILE_OPEN 0x02
 #define PMARGP_ERR_UNKNOWN_TYPE 0x03
 #define PMARGP_ERR_ARG_MISSING 0x04
+#define PMARGP_ERR_FLOAT_OVERFLOW 0x05
+#define PMARGP_ERR_OVERFLOW 0x06
+#define PMARGP_ERR_NO_ARGUMENTS 0x07
 
 /**
  * @brief Enumeration of supported argument types.
