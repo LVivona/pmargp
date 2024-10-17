@@ -11,12 +11,12 @@ char version[] = "0.1.0";
 
 bool run_test(const char *test_name, TestFunction fn) {
     bool result = fn();
-    printf("\r%s Complete... %s: %s\n", result ? "✅" : "❌",  test_name, result ? "PASSED" : "FAILED");
+    printf("\r%s %s... %s\n", result ? "✅" : "❌", result ? "PASSED" : "FAILED",  test_name);
     return result;
 }
 
-bool run_test_group(const char *group_name, TestFunction *tests, const char **test_names, size_t count) {
-    printf("\n=== Running Test Group: %s ===\n", group_name);
+bool run_test_group(TestFunction *tests, const char **test_names, size_t count) {
+    printf("\n============== Running Test Group ==============\n");
     bool result = true;
     for (size_t i = 0; i < count; ++i) {
         bool test_result = run_test(test_names[i], tests[i]);
@@ -24,7 +24,7 @@ bool run_test_group(const char *group_name, TestFunction *tests, const char **te
             result = test_result;
         }
     }
-    printf("=============================\n");
+    printf("================================================\n");
     return result;
 }
 
@@ -226,6 +226,82 @@ bool test_argument_aliases() {
 }
 
 
+// Test for handling whitespace in string arguments
+bool test_whitespace_in_strings() {
+    struct pmargp_parser_t parser;
+    parser_start(&parser);
+
+    char *str_arg;
+    parser.add_argument(&parser, "-s", "--string", PMARGP_STRING, &str_arg, "String with whitespace", false);
+
+    char *argv[] = {"program", "--string", "Hello World"};
+    int argc = sizeof(argv) / sizeof(argv[0]);
+
+    bool result = PMARGP_SUCCESS == parser.parses(&parser, argc, argv);
+    bool correct_output = strcmp(str_arg, "Hello World") == 0;
+
+    free_parser(&parser);
+    return result && correct_output;
+}
+
+// Test for handling negative numbers
+bool test_negative_numbers() {
+    struct pmargp_parser_t parser;
+    parser_start(&parser);
+
+    int int_arg;
+    float float_arg;
+    parser.add_argument(&parser, "-i", "--int", PMARGP_INT, &int_arg, "Negative integer", false);
+    parser.add_argument(&parser, "-f", "--float", PMARGP_FLOAT, &float_arg, "Negative float", false);
+
+    char *argv[] = {"program", "--int", "-42", "--float", "-3.14"};
+    int argc = sizeof(argv) / sizeof(argv[0]);
+
+    bool result = PMARGP_SUCCESS == parser.parses(&parser, argc, argv);
+    bool correct_output = (int_arg == -42) && (fabs(float_arg + 3.14) < 0.000001);
+
+    free_parser(&parser);
+    return result && correct_output;
+}
+
+// Test for argument order independence
+bool test_argument_order() {
+    struct pmargp_parser_t parser;
+    parser_start(&parser);
+
+    int int_arg;
+    char *str_arg;
+    parser.add_argument(&parser, "-i", "--int", PMARGP_INT, &int_arg, "Integer argument", false);
+    parser.add_argument(&parser, "-s", "--string", PMARGP_STRING, &str_arg, "String argument", false);
+
+    char *argv[] = {"program", "--string", "hello", "--int", "42"};
+    int argc = sizeof(argv) / sizeof(argv[0]);
+
+    bool result = PMARGP_SUCCESS == parser.parses(&parser, argc, argv);
+    bool correct_output = (int_arg == 42) && (strcmp(str_arg, "hello") == 0);
+
+    free_parser(&parser);
+    return result && correct_output;
+}
+
+// Test for handling quoted strings
+bool test_quoted_strings() {
+    struct pmargp_parser_t parser;
+    parser_start(&parser);
+
+    char *str_arg;
+    parser.add_argument(&parser, "-s", "--string", PMARGP_STRING, &str_arg, "Quoted string argument", false);
+
+    char *argv[] = {"program", "--string", "\"Hello, World!\""};
+    int argc = sizeof(argv) / sizeof(argv[0]);
+
+    bool result = PMARGP_SUCCESS == parser.parses(&parser, argc, argv);
+    bool correct_output = strcmp(str_arg, "\"Hello, World!\"") == 0;
+
+    free_parser(&parser);
+    return result && correct_output;
+}
+
 
 int main(int argc, char *argv[]) {
     
@@ -284,13 +360,27 @@ int main(int argc, char *argv[]) {
         "test_argument_aliases",
     };
 
+    TestFunction advanced_tests[] = {
+        test_whitespace_in_strings,
+        test_negative_numbers,
+        test_argument_order,
+        test_quoted_strings
+    };
+    const char *advanced_test_names[] = {
+        "test_whitespace_in_strings",
+        "test_negative_numbers",
+        "test_argument_order",
+        "test_quoted_strings"
+    };
+
     // Run tests based on input
     bool result = true;
     printf("7. run\n");
     if (all) {
-        result &= run_test_group("Basic Tests", basic_tests, basic_test_names, sizeof(basic_tests) / sizeof(basic_tests[0]));
-        result &= run_test_group("Error Handling Tests", error_handling_tests, error_handling_test_names, sizeof(error_handling_tests) / sizeof(error_handling_tests[0]));
-        result &= run_test_group("Boolean Flag Tests", boolean_tests, boolean_test_names, sizeof(boolean_tests) / sizeof(boolean_tests[0]));
+        result &= run_test_group(basic_tests, basic_test_names, sizeof(basic_tests) / sizeof(basic_tests[0]));
+        result &= run_test_group(error_handling_tests, error_handling_test_names, sizeof(error_handling_tests) / sizeof(error_handling_tests[0]));
+        result &= run_test_group(boolean_tests, boolean_test_names, sizeof(boolean_tests) / sizeof(boolean_tests[0]));
+        result &= run_test_group(advanced_tests, advanced_test_names, sizeof(advanced_tests) / sizeof(advanced_tests[0]));
         
     } else if (name) {
         printf("Available Test Names:\n");
