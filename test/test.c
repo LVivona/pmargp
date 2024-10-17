@@ -45,7 +45,7 @@ bool test_basic_parsing() {
     char *argv[] = {"program", "--string", "hello", "--int", "42", "--float", "3.14", "--bool"};
     int argc = sizeof(argv) / sizeof(argv[0]);
 
-    bool result = parser.parses(&parser, argc, argv);
+    bool result = PMARGP_SUCCESS == parser.parses(&parser, argc, argv);
 
     bool correct_output = _int == 42 && fabs(_float - 3.14) < 0.000001 && strncmp(_str, "hello", 6) == 0 && _bool;
     free_parser(&parser);
@@ -66,7 +66,7 @@ bool test_missing_required_arguments() {
     char *argv[] = {"program", "--optional", "test"};
     int argc = sizeof(argv) / sizeof(argv[0]);
 
-    int result = parser.parses(&parser, argc, argv) == PMARGP_ERR_ARG_MISSING;
+    bool result = parser.parses(&parser, argc, argv) == PMARGP_ERR_ARG_MISSING;
     free_parser(&parser);
     // Expect false since a required argument is missing
     return result;
@@ -85,7 +85,7 @@ bool test_default_values() {
     char *argv[] = {"program"};
     int argc = sizeof(argv) / sizeof(argv[0]);
 
-    bool result = parser.parses(&parser, argc, argv);
+    bool result = parser.parses(&parser, argc, argv) == PMARGP_SUCCESS;
 
     pmargp_argument_t *_int_arg = parser.get_argument(&parser, "-i");
 
@@ -110,10 +110,10 @@ bool test_argument_overlap() {
     char *argv[] = {"program", "-n", "42", "--number", "100"};
     int argc = sizeof(argv) / sizeof(argv[0]);
 
-    bool result = parser.parses(&parser, argc, argv);
+    bool result = parser.parses(&parser, argc, argv) == PMARGP_SUCCESS;
 
     int value = *((int *)parser.get_argument(&parser, "--number")->value_ptr);
-    bool default_set = value == 42;
+    bool default_set = 42 == value;
 
     free_parser(&parser);
 
@@ -133,7 +133,7 @@ bool test_multiple_strings() {
     char *argv[] = {"program", "--arg1", "hello", "--arg2", "world"};
     int argc = sizeof(argv) / sizeof(argv[0]);
 
-    bool result = parser.parses(&parser, argc, argv);
+    bool result = PMARGP_SUCCESS == parser.parses(&parser, argc, argv) ;
 
     bool correct_output = strncmp(arg1, "hello", 6) == 0 && strncmp(arg2, "world", 6) == 0;
     free_parser(&parser);
@@ -151,7 +151,7 @@ bool test_boolean_flags() {
     char *argv[] = {"program"};
     int argc = sizeof(argv) / sizeof(argv[0]);
 
-    bool result = parser.parses(&parser, argc, argv);
+    bool result = PMARGP_SUCCESS == parser.parses(&parser, argc, argv);
 
     free_parser(&parser);
 
@@ -166,7 +166,7 @@ bool test_missing_optional_arguments() {
     parser.add_argument(&parser, "-o", "--optional", PMARGP_STRING, &o, "Optional argument", false);
 
     char *argv[] = {"program"};
-    bool result = parser.parses(&parser, 1, argv);
+    bool result = PMARGP_SUCCESS == parser.parses(&parser, 1, argv);
     bool is_null = strlen(o) == 0;
     free_parser(&parser);
     return result && is_null; // Expect the optional argument to be null
@@ -181,10 +181,10 @@ bool test_invalid_argument() {
     char *argv[] = {"program", "--invalid", "value"};
     int argc = sizeof(argv) / sizeof(argv[0]);
 
-    bool result = parser.parses(&parser, argc, argv);
+    bool result = PMARGP_ERR_NO_ARGUMENTS == parser.parses(&parser, argc, argv);
     free_parser(&parser);
 
-    return !result; // Expect the result to be false due to an invalid argument
+    return result; // Expect the result to be false due to an invalid argument
 }
 
 
@@ -217,7 +217,7 @@ bool test_argument_aliases() {
     char *argv[] = {"program", "-v"};
     int argc = sizeof(argv) / sizeof(argv[0]);
 
-    bool result = parser.parses(&parser, argc, argv);
+    bool result = PMARGP_SUCCESS == parser.parses(&parser, argc, argv);
 
 
     free_parser(&parser);

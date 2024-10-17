@@ -29,8 +29,9 @@ int main(int argc, char *argv[]) {
 
 
     // Parse arguments
-    if (!parser.parses(&parser, argc, argv)) {
-        fprintf(stderr, "Error parsing arguments\n");
+    int error;
+    if ((error = parser.parses(&parser, argc, argv)) != 1) {
+        fprintf(stderr, "Error code %d parsing arguments\n", error);
         free_parser(&parser);
         return 1;
     }
@@ -62,8 +63,12 @@ int main(int argc, char *argv[]) {
 
     // Use the parsed values
     if (!quiet) {
-        for (int i = 0; i < count; i++) {
-            fprintf(output, "Hello, %s! The value is %f %c\n", name, value, character);
+        if (-1 == (long long)count){
+             fprintf(output, "I can't print that much\n");
+        } else {
+            for (int i = 0; i < count; i++) {
+                fprintf(output, "Hello, %s! The value is %f %c\n", name, value, character);
+            }
         }
     }
 
