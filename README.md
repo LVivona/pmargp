@@ -1,18 +1,17 @@
 # Poor Man's Argument Parser (argp)
 
-
-![example workflow](https://github.com/LVivona/pmargp/actions/workflows/c-cpp.yml/badge.svg)
+![Build Status](https://github.com/LVivona/pmargp/actions/workflows/c-cpp.yml/badge.svg)
 
 ## Overview
 
-**Poor Man's Argument Parser** (`argp`) is a simple, lightweight C library for handling command-line arguments. It allows easy parsing of various argument types such as integers, floats, strings, and files. Designed with minimal overhead, it is ideal for small-to-medium-sized C applications that require flexible command-line argument parsing without the need for large dependencies.
+**Poor Man's Argument Parser** (`argp`) is a minimalist, lightweight C library designed for effortless command-line argument parsing. It supports various argument types including integers, floats, strings, and file modes. `argp` is built to introduce minimal overhead, making it an excellent choice for small-to-medium-sized C applications that need flexible argument parsing without the complexity of large libraries.
 
 ## Features
 
-- **Multiple argument types**: Supports integers, floats, strings, characters, and various file types (read, write, binary modes).
-- **Short and long arguments**: Handle both short `-o` and long `--output` argument forms.
-- **Required and optional arguments**: Enforce required arguments with ease.
-- **Memory management**: Automatically handles memory allocation for dynamically parsed arguments.
+- **Supports multiple argument types**: Handles integers, floats, strings, characters, and files (with read, write, and binary modes).
+- **Short and long arguments**: Supports short form (`-o`) and long form (`--output`) argument types.
+- **Required and optional arguments**: Specify mandatory arguments easily.
+- **Automated memory management**: Automatically manages memory for dynamically parsed arguments.
 
 ## Project Structure
 
@@ -21,6 +20,8 @@ pmargp/
 ├── bin/               # Compiled binaries and object files
 │   ├── pmargp.o
 │   ├── example_program
+├── lib/               # Compiled binaries and object files
+│   └── libpmargp.a
 ├── example/           # Example usage of the argument parser
 │   └── example.c
 ├── src/               # Source files for the argument parser
@@ -36,8 +37,8 @@ pmargp/
 
 ### Prerequisites
 
-- **C Compiler**: You will need a C compiler such as GCC.
-- **Make**: To simplify the build process, a `Makefile` is provided.
+- **C Compiler**: Ensure you have a C compiler (e.g., GCC).
+- **Make**: A `Makefile` is provided to simplify the build process.
 
 ### Building the Project
 
@@ -54,9 +55,9 @@ pmargp/
     make all
     ```
 
-   This will create the binaries in the `bin/` directory:
-   - `example_program`: Example usage of the argument parser.
-   - `pmargp.o` object file of pmargp
+   This command compiles the following binaries in the `bin/` directory:
+   - `example_program`: Demonstrates how to use the argument parser.
+   - `pmargp.o`: The compiled object file of the `pmargp` library.
 
 3. Clean the build artifacts:
 
@@ -66,17 +67,17 @@ pmargp/
 
 ### Usage
 
-You can see how to use the argument parser by running the `example_program`:
+To see the argument parser in action, run the `example_program`:
 
 ```bash
-./bin/example_program  --name Luca --output file.txt -v 3.14
+./bin/example_program --name Luca --output file.txt -v 3.14
 ```
 
-To see the full example, check the `example/example.c` file.
+Refer to the `example/example.c` file for a detailed usage example.
 
 ### Example Code
 
-Here’s a simple example showing how to add and parse arguments with the **Poor Man's Argument Parser**:
+Below is a simplified example that shows how to configure and parse arguments using **Poor Man's Argument Parser**:
 
 ```c
 #include <stdio.h>
@@ -89,11 +90,11 @@ int main(int argc, char *argv[]) {
     struct pmargp_parser_t parser;
     parser_start(&parser);
 
-    // Set program name and description
+    // Set program details
     parser.name = "example_program";
-    parser.description = "A simple program to demonstrate the use of the argument parser.";
+    parser.description = "A simple program demonstrating argument parsing.";
 
-    // Add arguments
+    // Declare arguments
     char *name;
     int count = 1;
     float value;
@@ -101,55 +102,30 @@ int main(int argc, char *argv[]) {
     FILE *output = stdout;
     char character;
 
+    // Add arguments to the parser
     parser.add_argument(&parser, "-n", "--name", PMARGP_STRING, &name, "Your name", true);
     parser.add_argument(&parser, "-c", "--count", PMARGP_INT, &count, "Number of greetings", false);
     parser.add_argument(&parser, "-v", "--value", PMARGP_FLOAT, &value, "A floating-point value", false);
     parser.add_argument(&parser, "-q", "--quiet", PMARGP_BOOL, &quiet, "Run in quiet mode", false);
     parser.add_argument(&parser, "-o", "--output", PMARGP_W_FILE, &output, "Output file", false);
-    parser.add_argument(&parser, "-r", "--character", PMARGP_CHAR, &character, "random character", false);
+    parser.add_argument(&parser, "-r", "--character", PMARGP_CHAR, &character, "Random character", false);
 
-
-
-    // Parse arguments
-    if (!parser.parses(&parser, argc, argv)) {
-        fprintf(stderr, "Error parsing arguments\n");
+    // Parse the arguments
+    int error;
+    if ((error = parser.parses(&parser, argc, argv)) != 1) {
+        fprintf(stderr, "Error code %d parsing arguments\n", error);
         free_parser(&parser);
         return 1;
     }
 
-    // Retrieve and use the parsed values
-    Argument_t *name_arg = parser.get_argument(&parser, "-n");
-    Argument_t *count_arg = parser.get_argument(&parser, "-c");
-    Argument_t *value_arg = parser.get_argument(&parser, "--value");
-    Argument_t *quiet_arg = parser.get_argument(&parser, "--quiet");
-    Argument_t *output_arg = parser.get_argument(&parser, "--output");
-    Argument_t *char_arg = parser.get_argument(&parser, "--character");
-
-    printf("Address of name:   %p\n", (void*)&name);
-    printf("Address of count:  %p\n", (void*)&count);
-    printf("Address of value:  %p\n", (void*)&value);
-    printf("Address of quiet:  %p\n", (void*)&quiet);
-    printf("Address of output: %p\n", (void*)&output);
-    printf("Address of character: %p\n", (void*)&character);
-
-    assert(&name == name_arg->value_ptr);
-    assert(&count == count_arg->value_ptr);
-    assert(&value == value_arg->value_ptr);
-    assert(&quiet == quiet_arg->value_ptr);
-    assert(&output == output_arg->value_ptr);
-    assert(&character == char_arg->value_ptr);
-
-    printf("quite: %d\n", quiet);
-    printf("count: %d\n", count);
-
-    // Use the parsed values
+    // Output and argument handling logic
     if (!quiet) {
         for (int i = 0; i < count; i++) {
             fprintf(output, "Hello, %s! The value is %f %c\n", name, value, character);
         }
     }
 
-    // Clean up
+    // Cleanup
     if (output != stdout) {
         fclose(output);
     }
@@ -160,64 +136,37 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-```
->>./bin/example_program -h                                       
+You can get help on available arguments by running ``my_program -h``
 
-example_program
-A simple program to demonstrate the use of the argument parser.
+```
+A simple program demonstrating argument parsing.
 
 Usage: example_program [OPTIONS]
 
 Options:
-  --name         -n  <string>       Your name (Type: string) [Required][Default: None]
-  --count        -c  <integer>      Number of greetings (Type: int)[Default: 1]
-  --value        -v  <float>        A floating-point value (Type: float)[Default: 0.00]
-  --quiet        -q  <bool>         Run in quiet mode (Type: bool)[Default: false]
-  --output       -o  <write_file>   Output file (Type: write file)
-  --character    -r  <char>         random character (Type: char)[Default: ]
+  --name         -n  <string>       Your name (Required)
+  --count        -c  <integer>      Number of greetings (Default: 1)
+  --value        -v  <float>        A floating-point value (Default: 0.00)
+  --quiet        -q  <bool>         Run in quiet mode (Default: false)
+  --output       -o  <write_file>   Output file
+  --character    -r  <char>         Random character
 ```
 
-### Tests
+## Testing
 
-Unit tests are provided in the `test/` directory. To run them, simply build and execute:
+Unit tests are available in the `test/` directory. To run the tests:
 
 ```bash
 make test
 ```
 
-The test program will validate the functionality of the argument parser, ensuring proper handling of various argument types and cases.
-
-```
-1.Start program
-2.Create Parser
-3.Add description
-4.Add argument 1
-5.Add argument 2
-6. parse argument
-
-=== Running Test Group: Basic Tests ===
-✅ Complete... test_basic_parsing: PASSED
-✅ Complete... test_default_values: PASSED
-✅ Complete... test_multiple_strings: PASSED
-=============================
-
-=== Running Test Group: Error Handling Tests ===
-Required argument missing: --required
-✅ Complete... test_missing_required_arguments: PASSED
-✅ Complete... test_invalid_argument: PASSED
-Required argument missing: --arg
-✅ Complete... test_unrecognized_short_key: PASSED
-=============================
-
-=== Running Test Group: Boolean Flag Tests ===
-✅ Complete... test_boolean_flags: PASSED
-✅ Complete... test_missing_optional_arguments: PASSED
-✅ Complete... test_argument_aliases: PASSED
-=============================
-== END ==
-Test passed. Removing test executable.
-```
-
+This will execute the test suite, ensuring that the argument parser works as expected and validating different argument types and edge cases.
+if you wish to add your own test you can follow the test I provided, and extend it by just adding the function pointer, and its corresponding 
+names to the run_group similar to the others. 
 ## License
 
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+This version refines the layout, introduces consistent styling, and improves clarity, maintaining a professional tone throughout.
