@@ -6,14 +6,14 @@ set -e
 build() {
     local standard=$1
     echo "Building the project with $standard standard..."
-    make CFLAGS="-std=$standard"
+    make CFLAGS="-Wall -Wextra -std=$standard -fPIC"
 }
 
 # Function to run tests
 test() {
     local standard=$1
     echo "Running tests with $standard standard..."
-    make test CFLAGS="-std=$standard"
+    make test CFLAGS="-Wall -Wextra -std=$standard -fPIC"
 }
 
 # Check if a standard is provided
