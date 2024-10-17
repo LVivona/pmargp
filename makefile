@@ -1,57 +1,113 @@
+# Makefile for Poor Man's Argument Parser (pmargp)
+
 # Compiler and flags
-CC = gcc
-CFLAGS = -Wall -Wextra
+CC := gcc
+CFLAGS := -Wall -Wextra -fPIC
+LDFLAGS := -shared
+
+# Detect OS
+UNAME_S := $(shell uname -s)
 
 # Project directories
-SRC_DIR = src
-TEST_DIR = test
-BIN_DIR = bin
-EXAMPLE_DIR = example
+SRC_DIR := src
+TEST_DIR := test
+BIN_DIR := bin
+EXAMPLE_DIR := example
+LIB_DIR := lib
+
+# Library name and version
+LIB_NAME := pmargp
+VERSION := 0.1.0
+MAJOR_VERSION := $(shell echo $(VERSION) | cut -d. -f1)
 
 # Source files
-LIB_SRC = $(SRC_DIR)/pmargp.c
-LIB_HEADER = $(SRC_DIR)/pmargp.h
-TEST_SRC = $(TEST_DIR)/test.c
-EXAMPLE_SRC = $(EXAMPLE_DIR)/example.c
+LIB_SRC := $(SRC_DIR)/$(LIB_NAME).c
+LIB_HEADER := $(SRC_DIR)/$(LIB_NAME).h
+TEST_SRC := $(TEST_DIR)/test.c
+EXAMPLE_SRC := $(EXAMPLE_DIR)/example.c
 
-# Object and executable files in the bin directory
-LIB_OBJ = $(BIN_DIR)/pmargp.o
-EXECUTABLE = $(BIN_DIR)/test
-EXAMPLE_EXECUTABLE = $(BIN_DIR)/example_program
+# Object and executable files
+LIB_OBJ := $(BIN_DIR)/$(LIB_NAME).o
+STATIC_LIB := $(LIB_DIR)/lib$(LIB_NAME).a
+TEST_EXECUTABLE := $(BIN_DIR)/test
+EXAMPLE_EXECUTABLE := $(BIN_DIR)/example_program
 
-# Ensure the bin directory exists before compiling
-$(BIN_DIR):
-	mkdir -p $(BIN_DIR)
+# Installation directories
+PREFIX := /usr/local
+INSTALL_INC_DIR := $(PREFIX)/include
+INSTALL_LIB_DIR := $(PREFIX)/lib
+
+# OS-specific settings
+ifeq ($(UNAME_S),Darwin)
+    SHARED_LIB := $(LIB_DIR)/lib$(LIB_NAME).$(VERSION).dylib
+    SHARED_LIB_LINK := $(LIB_DIR)/lib$(LIB_NAME).dylib
+    SHARED_FLAG := -dynamiclib
+else
+    SHARED_LIB := $(LIB_DIR)/lib$(LIB_NAME).so.$(VERSION)
+    SHARED_LIB_LINK := $(LIB_DIR)/lib$(LIB_NAME).so
+    SHARED_FLAG := -shared
+endif
+
+# Ensure directories exist
+$(BIN_DIR) $(LIB_DIR):
+	mkdir -p $@
 
 # Compile the object file for the library
 $(LIB_OBJ): $(LIB_SRC) $(LIB_HEADER) | $(BIN_DIR)
-	$(CC) $(CFLAGS) -I$(SRC_DIR) -c $(LIB_SRC) -o $(LIB_OBJ)
+	$(CC) $(CFLAGS) -I$(SRC_DIR) -c $(LIB_SRC) -o $@
 
-# Build the test executable, ensuring the compiler looks in the src directory for the header
-$(EXECUTABLE): $(LIB_OBJ) $(TEST_SRC) | $(BIN_DIR)
-	$(CC) $(CFLAGS) -I$(SRC_DIR) $(LIB_OBJ) $(TEST_SRC) -o $(EXECUTABLE)
+# Create static library
+$(STATIC_LIB): $(LIB_OBJ) | $(LIB_DIR)
+	ar rcs $@ $<
+
+# Create shared library
+$(SHARED_LIB): $(LIB_OBJ) | $(LIB_DIR)
+	$(CC) $(SHARED_FLAG) $(LDFLAGS) -o $@ $<
+	ln -sf $(notdir $(SHARED_LIB)) $(SHARED_LIB_LINK)
+
+# Build the test executable
+$(TEST_EXECUTABLE): $(TEST_SRC) $(STATIC_LIB) | $(BIN_DIR)
+	$(CC) $(CFLAGS) -I$(SRC_DIR) $< $(STATIC_LIB) -o $@
 
 # Build the example executable
-$(EXAMPLE_EXECUTABLE): $(LIB_OBJ) $(EXAMPLE_SRC) | $(BIN_DIR)
-	$(CC) $(CFLAGS) -I$(SRC_DIR) $(LIB_OBJ) $(EXAMPLE_SRC) -o $(EXAMPLE_EXECUTABLE)
+$(EXAMPLE_EXECUTABLE): $(EXAMPLE_SRC) $(STATIC_LIB) | $(BIN_DIR)
+	$(CC) $(CFLAGS) -I$(SRC_DIR) $< $(STATIC_LIB) -o $@
+
+# Phony targets
+.PHONY: all clean test install uninstall
+
+all: $(STATIC_LIB) $(SHARED_LIB) $(TEST_EXECUTABLE) $(EXAMPLE_EXECUTABLE)
 
 # Run the test
-test: $(EXECUTABLE)
-	@if ./$(EXECUTABLE) --all; then \
-	    echo "Test passed. Removing test executable."; \
-	    rm -f $(EXECUTABLE); \
+test: $(TEST_EXECUTABLE)
+	@if ./$(TEST_EXECUTABLE) --all; then \
+		echo "Test passed."; \
 	else \
-	    echo "Test failed. Removing both test executable and object file."; \
-	    rm -f $(EXECUTABLE) $(LIB_OBJ); \
+		echo "Test failed."; \
+		exit 1; \
 	fi
 
-# Clean up (remove bin directory and all its contents)
+# Install the library and header
+install: $(STATIC_LIB) $(SHARED_LIB) $(LIB_HEADER)
+	install -d $(INSTALL_INC_DIR) $(INSTALL_LIB_DIR)
+	install -m 644 $(LIB_HEADER) $(INSTALL_INC_DIR)
+	install -m 644 $(STATIC_LIB) $(INSTALL_LIB_DIR)
+	install -m 755 $(SHARED_LIB) $(INSTALL_LIB_DIR)
+	ln -sf $(notdir $(SHARED_LIB)) $(INSTALL_LIB_DIR)/$(notdir $(SHARED_LIB_LINK))
+ifeq ($(UNAME_S),Linux)
+	ldconfig
+endif
+
+# Uninstall the library and header
+uninstall:
+	rm -f $(INSTALL_INC_DIR)/$(LIB_NAME).h
+	rm -f $(INSTALL_LIB_DIR)/lib$(LIB_NAME).a
+	rm -f $(INSTALL_LIB_DIR)/lib$(LIB_NAME).so*
+	rm -f $(INSTALL_LIB_DIR)/lib$(LIB_NAME).*.dylib
+ifeq ($(UNAME_S),Linux)
+	ldconfig
+endif
+
+# Clean up
 clean:
-	rm -rf $(BIN_DIR)
-
-example: $(EXAMPLE_EXECUTABLE)
-	@echo "done"
-
-all: $(EXAMPLE_EXECUTABLE) $(LIB_OBJ) $(TEST_SRC) | $(BIN_DIR)
-
-.PHONY: all clean
+	rm -rf $(BIN_DIR) $(LIB_DIR)
