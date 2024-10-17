@@ -16,8 +16,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Make bash script executable
-      run: chmod +x scripts/workflow.build.sh build ${{ matrix.standard }}
-    
-    - name: Test pmargp build standard 📦
+      run: chmod +x scripts/workflow.build.sh
+    - name: pmargp build standard 📦
+      run: scripts/workflow.build.sh build ${{ matrix.standard }}
+    - name: pmargp test standard 🧪
       run: ./scripts/workflow.build.sh test ${{ matrix.standard }}
 
