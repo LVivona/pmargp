@@ -165,9 +165,9 @@ int parses(struct pmargp_parser_t* parser, int argc, char* argv[]) {
             arg->allocated = true;
         } else if (i + 1 < argc) {
             switch (arg->type) {
-                errno = 0;
+                errno = 0; // error catch
                 case PMARGP_CHAR:
-                    *(char*)arg->value_ptr = *argv[++i];  // Store the first character into the pointer to char
+                    *(char*)arg->value_ptr = *argv[++i];  
                     break;
                 case PMARGP_STRING:
                     *(char**)arg->value_ptr = strdup(argv[++i]);
@@ -239,4 +239,7 @@ void free_parser(struct pmargp_parser_t *parser) {
         free(arg->short_key);
         free(arg->description);
     }
+    free(parser->args);
+    parser->args = NULL;
+    parser->argc = 0;
 }
