@@ -163,6 +163,7 @@ int parses(struct pmargp_parser_t* parser, int argc, char* argv[]) {
     if (parser->argc == 0) return PMARGP_ERR_NO_ARGUMENTS;
     if (help_info(argc, argv)) {
         help(parser);
+        free_parser(parser); // free parser for due diligence 
         exit(EXIT_SUCCESS);
     }
 
