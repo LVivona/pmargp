@@ -10,10 +10,14 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        standard: [c11, c17]
     steps:
     - uses: actions/checkout@v4
-    - name: make
-      run: make
-    - name: make test
-      run: make test
+    - name: Make bash script executable
+      run: chmod +x scripts/workflow.build.sh build ${{ matrix.standard }}
+    
+    - name: Test pmargp build standard 📦
+      run: ./scripts/workflow.build.sh test ${{ matrix.standard }}
+
