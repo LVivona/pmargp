@@ -3,7 +3,6 @@
 # Compiler and flags
 CC := gcc
 CFLAGS ?= -Wall -Wextra -fPIC  # Added -fPIC here
-LDFLAGS := -shared
 
 # Detect OS
 UNAME_S := $(shell uname -s)
@@ -68,7 +67,7 @@ $(STATIC_LIB): $(LIB_OBJ) | $(LIB_DIR)
 
 # Create shared library
 $(SHARED_LIB): $(LIB_OBJ) | $(LIB_DIR)
-	$(CC) $(SHARED_FLAG) $(LDFLAGS) -o $@ $<
+	$(CC) $(SHARED_FLAG) -o $@ $<
 	ln -sf $(notdir $(SHARED_LIB)) $(SHARED_LIB_LINK)
 
 # Build the test executable
