@@ -209,7 +209,6 @@ int parses(struct pmargp_parser_t* parser, int argc, char* argv[]) {
     for (int j = 0; j < parser->argc; j++) {
         pmargp_argument_t *arg = &parser->args[j];
         if (arg->required && !arg->allocated) {
-            fprintf(stderr, "Required argument missing: %s\n", arg->key);
             return PMARGP_ERR_ARG_MISSING;
         }
     }
