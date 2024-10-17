@@ -1,7 +1,7 @@
 # Makefile for Poor Man's Argument Parser (pmargp)
 # Compiler and flags
 CC := gcc
-CFLAGS ?= -Wall -Wextra
+CFLAGS ?= -Wall -Wextra -fPIC
 LDFLAGS := -shared
 # Detect OS
 UNAME_S := $(shell uname -s)
