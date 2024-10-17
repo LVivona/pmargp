@@ -1,4 +1,4 @@
-#include "../src/pmargp.h"
+#include "pmargp.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>

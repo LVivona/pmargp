@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "../src/pmargp.h"
+#include "pmargp.h"
 
 int main(int argc, char *argv[]) {
     struct pmargp_parser_t parser;
