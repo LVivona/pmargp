@@ -5,6 +5,19 @@
 #include <errno.h>
 #include <limits.h>
 
+#if  !defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE < 200112L
+// Code for when POSIX 2001 is not available
+char* strdup(const char* s) {
+    size_t len = strlen(s) + 1;
+    char* copy = malloc(len);
+    if (copy) {
+        memcpy(copy, s, len);
+    }
+    return copy;
+}
+#endif
+
+
 static inline bool  is_help(const char *flag) {
     return strcmp(flag, "--help") == 0 || strcmp(flag, "-h") == 0;
 }
