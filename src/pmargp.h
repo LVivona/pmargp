@@ -64,6 +64,7 @@ extern "C" {
 #define PMARGP_ERR_FLOAT_OVERFLOW 0x05
 #define PMARGP_ERR_OVERFLOW 0x06
 #define PMARGP_ERR_NO_ARGUMENTS 0x07
+#define PMARGP_ERR_NULL 0x08
 
 /**
  * @brief Enumeration of supported argument types.

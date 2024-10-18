@@ -8,6 +8,7 @@
 #if  !defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE < 200112L
 // Code for when POSIX 2001 is not available
 char* strdup(const char* s) {
+    if (!s) return NULL;
     size_t len = strlen(s) + 1;
     char* copy = malloc(len);
     if (copy) {
@@ -18,11 +19,16 @@ char* strdup(const char* s) {
 #endif
 
 
-static inline bool  is_help(const char *flag) {
+static inline bool is_help(const char *flag) {
+    if (flag == NULL) return false;
     return strcmp(flag, "--help") == 0 || strcmp(flag, "-h") == 0;
 }
 
 pmargp_argument_t *get_argument(struct pmargp_parser_t* parser, const char *key) {
+    if (!parser || !key) {
+        return NULL;
+    }
+
     for (int i = 0; i < parser->argc; i++) {
         if (strcmp(parser->args[i].key, key) == 0 || 
             (parser->args[i].short_key && strcmp(parser->args[i].short_key, key) == 0)) {
@@ -34,8 +40,12 @@ pmargp_argument_t *get_argument(struct pmargp_parser_t* parser, const char *key)
 
 
 int get_argument_index(struct pmargp_parser_t* parser, const char *key) {
+    if (!parser || !key) {
+        return -1;
+    }
+
     for (int i = 0; i < parser->argc; i++) {
-        if (strcmp(parser->args[i].key, key) == 0 ||
+        if (strcmp(parser->args[i].key, key) == 0 || 
             (parser->args[i].short_key && strcmp(parser->args[i].short_key, key) == 0)) {
             return i;
         }
@@ -108,6 +118,7 @@ static const char* type_to_token(pmargp_type_t type) {
 }
 
 static void help(struct pmargp_parser_t *parser) {
+    if(!parser) return;
     printf("\n%s\n", parser->name ? parser->name : "Program Name");
     printf("%s\n\n", parser->description ? parser->description : "No description provided.");
     printf("Usage: %s [OPTIONS]\n\n", parser->name ? parser->name : "program");
@@ -160,6 +171,7 @@ static const char *get_file_mode(pmargp_type_t type) {
 }
 
 int parses(struct pmargp_parser_t* parser, int argc, char* argv[]) {
+    if (!parser) return PMARGP_ERR_NULL;
     if (parser->argc == 0) return PMARGP_ERR_NO_ARGUMENTS;
     if (help_info(argc, argv)) {
         help(parser);
@@ -170,7 +182,6 @@ int parses(struct pmargp_parser_t* parser, int argc, char* argv[]) {
     for (int i = 1; i < argc; i++) {
         int idx = get_argument_index(parser, argv[i]);
         if (idx == -1) continue;
-
         pmargp_argument_t *arg = &parser->args[idx];
         if (arg->allocated) continue;
 
