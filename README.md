@@ -4,10 +4,21 @@
   <img src="/.github/assets/header.png">
 </p>
 
+<div align="center">
+
+| ``c89`` | ``c99`` | ``c11`` | ``c17`` |
+| --- | --- | --- | --- |
+|  ❌  |  ✓  |  ✓  |  ✓  |
+  
+</div>
 
 
 
-![Build Status](https://github.com/LVivona/pmargp/actions/workflows/c-cpp.yml/badge.svg)
+<div align="center">
+
+  ![Build Status](https://github.com/LVivona/pmargp/actions/workflows/c-cpp.yml/badge.svg)
+
+</div>
 
 ## Overview
 
