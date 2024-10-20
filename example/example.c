@@ -8,6 +8,7 @@ int main(int argc, char *argv[]) {
     struct pmargp_parser_t parser;
     parser_start(&parser);
 
+    
     // Set program name and description
     parser.name = "example_program";
     parser.description = "A simple program to demonstrate the use of the argument parser.";
@@ -19,24 +20,39 @@ int main(int argc, char *argv[]) {
     bool quiet = false;
     FILE *output = stdout;
     char character;
-
-    parser.add_argument(&parser, "-n", "--name", PMARGP_STRING, &name, "Your name", true);
+    int error;
+    /**
+     * "class" based
+     */
+    // check if argument is valid argument
+    if((error = parser.add_argument(&parser, "-n", NULL, PMARGP_STRING, &name, "Your name", true)) != PMARGP_SUCCESS){
+        // this code will never reach here since this argument is valid
+        fprintf(stderr, "Error code %d parsing arguments\n", error);
+        return EXIT_FAILURE;
+    }
     parser.add_argument(&parser, "-c", "--count", PMARGP_INT, &count, "Number of greetings", false);
     parser.add_argument(&parser, "-v", "--value", PMARGP_FLOAT, &value, "A floating-point value", false);
-    parser.add_argument(&parser, "-q", "--quiet", PMARGP_BOOL, &quiet, "Run in quiet mode", false);
-    parser.add_argument(&parser, "-o", "--output", PMARGP_W_FILE, &output, "Output file", false);
-    parser.add_argument(&parser, "-r", "--character", PMARGP_CHAR, &character, "random character", false);
 
+    
+    /**
+     * "functional" based
+     */
+    add_argument(&parser, NULL, "--quiet", PMARGP_BOOL, &quiet, "Run in quiet mode", false);
+    add_argument(&parser, "-o", "--output", PMARGP_W_FILE, &output, "Output file", false);
+    add_argument(&parser, "-r", "--character", PMARGP_CHAR, &character, "random character", false);
 
     // Parse arguments
-    int error;
-    if ((error = parser.parses(&parser, argc, argv)) != 1) {
+    if ((error = parser.parses(&parser, argc, argv)) != PMARGP_SUCCESS) {
         fprintf(stderr, "Error code %d parsing arguments\n", error);
         free_parser(&parser);
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    // Retrieve and use the parsed values
+    /* 
+     * Retrieve and use the parsed values ptr
+     * but this isn't not needed since where pointing to 
+     * stack variables we can just use those.
+     */
     pmargp_argument_t *name_arg = parser.get_argument(&parser, "-n");
     pmargp_argument_t *count_arg = parser.get_argument(&parser, "-c");
     pmargp_argument_t *value_arg = parser.get_argument(&parser, "--value");
@@ -44,6 +60,20 @@ int main(int argc, char *argv[]) {
     pmargp_argument_t *output_arg = parser.get_argument(&parser, "--output");
     pmargp_argument_t *char_arg = parser.get_argument(&parser, "--character");
 
+
+    /**
+     * since this is allocated within the stack it's easy fast access memory
+     * then if we where to allocate this on the heap.
+     *  ----------------
+     * |     stack      |
+     * |----------------|
+     * |  0xffffff168   |
+     * |----------------|
+     * |  0xffffff164   |
+     * |----------------|
+     * |      ...       |
+     *  ----------------
+     */
     printf("Address of name:   %p\n", (void*)&name);
     printf("Address of count:  %p\n", (void*)&count);
     printf("Address of value:  %p\n", (void*)&value);
@@ -51,6 +81,10 @@ int main(int argc, char *argv[]) {
     printf("Address of output: %p\n", (void*)&output);
     printf("Address of character: %p\n", (void*)&character);
 
+    /**
+     * this just assures that the value ptr is pointing to the stack
+     * argument.
+     */
     assert(&name == name_arg->value_ptr);
     assert(&count == count_arg->value_ptr);
     assert(&value == value_arg->value_ptr);
@@ -63,6 +97,7 @@ int main(int argc, char *argv[]) {
 
     // Use the parsed values
     if (!quiet) {
+
         if (-1 == (long long)count){
              fprintf(output, "I can't print that much\n");
         } else {
