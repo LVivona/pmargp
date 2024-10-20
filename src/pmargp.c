@@ -53,14 +53,14 @@ int get_argument_index(struct pmargp_parser_t* parser, const char *key) {
     return -1;
 }
 
-bool add_argument(struct pmargp_parser_t* parser, const char* restrict short_key, const char* restrict key, 
+int add_argument(struct pmargp_parser_t* parser, const char* restrict short_key, const char* restrict key, 
                   pmargp_type_t type, void* value_ptr, char *description, bool required) {
-    if (key == NULL || parser == NULL) return false;
-    if (get_argument_index(parser, key) >= 0 || (short_key && get_argument_index(parser, short_key) >= 0)) return false;
-    if (is_help(key)) return false;
+    if (key == NULL || parser == NULL) return 0x00;
+    if (get_argument_index(parser, key) >= 0 || (short_key && get_argument_index(parser, short_key) >= 0)) return 0x00;
+    if (is_help(key)) return 0x00;
 
     pmargp_argument_t *new_args = realloc(parser->args, (parser->argc + 1) * sizeof(pmargp_argument_t));
-    if (new_args == NULL) return false;
+    if (new_args == NULL) return 0x00;
     parser->args = new_args;
 
     pmargp_argument_t *arg = &parser->args[parser->argc];
@@ -73,7 +73,7 @@ bool add_argument(struct pmargp_parser_t* parser, const char* restrict short_key
     arg->allocated = false;
 
     parser->argc++;
-    return true;
+    return 0x01;
 }
 
 static bool help_info(int argc, char* argv[]) {

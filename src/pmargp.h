@@ -138,7 +138,7 @@ struct pmargp_parser_t
      * @param required Whether the argument is required.
      * @return true if the argument was added successfully, false otherwise.
      */
-    bool (*add_argument)(struct pmargp_parser_t *parser, const char *short_key, const char *key,
+    int (*add_argument)(struct pmargp_parser_t *parser, const char *short_key, const char *key,
                          pmargp_type_t type, void *value_ptr, char *description, bool required);
 
     /**
@@ -151,6 +151,12 @@ struct pmargp_parser_t
     int (*parses)(struct pmargp_parser_t *parser, int argc, char *argv[]);
 
 };
+
+pmargp_argument_t *get_argument(struct pmargp_parser_t *parser, const char *key);
+int get_argument_index(struct pmargp_parser_t *parser, const char *key);
+int parses(struct pmargp_parser_t *parser, int argc, char *argv[]);
+int add_argument(struct pmargp_parser_t *parser, const char *short_key, const char *key,
+                         pmargp_type_t type, void *value_ptr, char *description, bool required);
 
 /**
  * @brief Initialize the parser structure.
