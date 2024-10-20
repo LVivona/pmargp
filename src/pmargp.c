@@ -247,6 +247,7 @@ int parses(struct pmargp_parser_t* parser, int argc, char* argv[]) {
         exit(EXIT_SUCCESS);
     }
 
+    char *endptr;
     for (int i = 1; i < argc; i++) {
         int idx = get_argument_index(parser, argv[i]);
         if (idx == -1) continue;
@@ -263,13 +264,21 @@ int parses(struct pmargp_parser_t* parser, int argc, char* argv[]) {
                     *(char*)arg->value_ptr = *argv[++i];  
                     break;
                 case PMARGP_STRING:
-                    *(char**)arg->value_ptr = strdup(argv[++i]);
+                    *(char**)arg->value_ptr = argv[++i];
                     break;
                 case PMARGP_FLOAT: 
-                    *(float*)arg->value_ptr = atof(argv[++i]);
+                    errno = 0;
+                    *(float*)arg->value_ptr = strtof(argv[++i], &endptr);
+                    if (errno == ERANGE || *endptr != '\0') {
+                        return PMARGP_ERR_INVALID_VALUE;
+                    }
                     break;
                 case PMARGP_INT: 
-                    *(int*)arg->value_ptr = atoi(argv[++i]);
+                    errno = 0;
+                    *(int*)arg->value_ptr = strtol(argv[++i], &endptr, 10);
+                    if (errno == ERANGE || *endptr != '\0') {
+                        return PMARGP_ERR_INVALID_VALUE;
+                    }
                     break;
                 case PMARGP_R_FILE:
                 case PMARGP_W_FILE:
@@ -292,9 +301,7 @@ int parses(struct pmargp_parser_t* parser, int argc, char* argv[]) {
                     return PMARGP_ERR_UNKNOWN_TYPE;
             }
             arg->allocated = true;
-            if(errno == ERANGE){
-                return PMARGP_ERR_OVERFLOW;
-            }
+
         }
     }
 
