@@ -12,8 +12,6 @@
   
 </div>
 
-
-
 <div align="center">
 
   ![Build Status](https://github.com/LVivona/pmargp/actions/workflows/c-cpp.yml/badge.svg)
