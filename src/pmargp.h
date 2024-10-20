@@ -39,7 +39,26 @@
 extern "C" {
 #endif
 
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199409L
 #include <stdbool.h>
+#elif defined(__STDC__)
+
+#if !defined(__cplusplus)
+typedef int bool;
+#define true 1
+#define false 0
+#endif
+#elif defined(__GNUC__) && !defined(__STRICT_ANSI__)
+/* Define bool as a GNU extension. */
+typedef int bool;
+#if defined(__cplusplus) && __cplusplus < 201103L
+/* For C++98, define bool, false, true as a GNU extension. */
+#define bool bool
+#define false false
+#define true true
+#endif
+#endif
+
 #include <stdio.h>
 
 /**
@@ -65,6 +84,9 @@ extern "C" {
 #define PMARGP_ERR_OVERFLOW 0x06
 #define PMARGP_ERR_NO_ARGUMENTS 0x07
 #define PMARGP_ERR_NULL 0x08
+#define PMARGP_ERR_MEMORY_ALLOCATION 0x09
+#define PMARGP_ERR_EXISTING_ARGUMENT 0x0a
+#define PMARGP_ERR_INVALID_KEY 0x0b
 
 /**
  * @brief Enumeration of supported argument types.

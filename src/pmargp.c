@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
+#include <regex.h>
 
-#if  !defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE < 200112L
-// Code for when POSIX 2001 is not available
+#if  defined(__STDC_VERSION__) && __STDC_VERSION__ < 200112L
 char* strdup(const char* s) {
     if (!s) return NULL;
     size_t len = strlen(s) + 1;
@@ -17,21 +17,29 @@ char* strdup(const char* s) {
     return copy;
 }
 #endif
-
+#define LARGE_KEY_REGEX "^--[A-Za-z0-9]+([_-]?[A-Za-z0-9]+)*$"
+#define SHORT_KEY_REGEX "^-[A-Za-z]$"
 
 static inline bool is_help(const char *flag) {
     if (flag == NULL) return false;
     return strcmp(flag, "--help") == 0 || strcmp(flag, "-h") == 0;
 }
 
+#define PMARGS_IS_VALID_KEY(parser, key) (\
+            (parser->args[i].key && strcmp(parser->args[i].key, key) == 0) || \
+            (parser->args[i].short_key && strcmp(parser->args[i].short_key, key) == 0)\
+)
+
+// NOTE: this runs O(n) we could probably achieve better results with 
+// hash-map with little to no collision allowing for O(1) best case.
+// but do we really need to add far more memeory into something simple
 pmargp_argument_t *get_argument(struct pmargp_parser_t* parser, const char *key) {
     if (!parser || !key) {
         return NULL;
     }
 
     for (int i = 0; i < parser->argc; i++) {
-        if (strcmp(parser->args[i].key, key) == 0 || 
-            (parser->args[i].short_key && strcmp(parser->args[i].short_key, key) == 0)) {
+        if (PMARGS_IS_VALID_KEY(parser, key)) {
             return &parser->args[i];
         }
     }
@@ -44,28 +52,86 @@ int get_argument_index(struct pmargp_parser_t* parser, const char *key) {
         return -1;
     }
 
+    // 
     for (int i = 0; i < parser->argc; i++) {
-        if (strcmp(parser->args[i].key, key) == 0 || 
-            (parser->args[i].short_key && strcmp(parser->args[i].short_key, key) == 0)) {
+        if (PMARGS_IS_VALID_KEY(parser, key)) {
             return i;
         }
     }
     return -1;
 }
 
+int check_regex(const char *pattern, const char *str) {
+    regex_t regex;
+    int ret;
+
+    ret = regcomp(&regex, pattern, REG_EXTENDED);
+    if (ret) return 0; 
+
+    ret = regexec(&regex, str, 0, NULL, 0);
+    regfree(&regex); 
+
+    return ret == 0;
+}
+
 int add_argument(struct pmargp_parser_t* parser, const char* restrict short_key, const char* restrict key, 
-                  pmargp_type_t type, void* value_ptr, char *description, bool required) {
-    if (key == NULL || parser == NULL) return 0x00;
-    if (get_argument_index(parser, key) >= 0 || (short_key && get_argument_index(parser, short_key) >= 0)) return 0x00;
-    if (is_help(key)) return 0x00;
+                 pmargp_type_t type, void* value_ptr, char *description, bool required) {
+    
+    if (parser == NULL) return PMARGP_ERR_NULL;
+
+    // Create a copy of the key and adjust it
+    char *adjusted_key = NULL;
+    if(key != NULL){
+        adjusted_key = strdup(key);
+        if (adjusted_key == NULL) return PMARGP_ERR_MEMORY_ALLOCATION;
+
+        // Validate the large key using regex
+        if (!check_regex(LARGE_KEY_REGEX, adjusted_key)) {
+            free(adjusted_key);
+            return PMARGP_ERR_INVALID_KEY;  // Large key does not match regex
+        }
+        
+    }
+
+    char *adjusted_short_key = NULL;
+    if (short_key != NULL) {
+        adjusted_short_key = strdup(short_key);
+        if (adjusted_short_key == NULL) {
+            free(adjusted_key);
+            return PMARGP_ERR_MEMORY_ALLOCATION;
+        }
+
+        // Validate the short key using regex
+        if (!check_regex(SHORT_KEY_REGEX, adjusted_short_key)) {
+            free(adjusted_key);
+            free(adjusted_short_key);
+            return PMARGP_ERR_INVALID_KEY;  // Short key does not match regex
+        }
+    }
+
+    if (adjusted_key == NULL && adjusted_short_key == NULL){
+        return PMARGP_ERR_INVALID_KEY;
+    }
+
+    if (is_help(adjusted_key) || 
+        get_argument_index(parser, adjusted_key) >= 0 || 
+        (adjusted_short_key && get_argument_index(parser, adjusted_short_key) >= 0)) {
+        free(adjusted_key);
+        if (adjusted_short_key) free(adjusted_short_key);
+        return PMARGP_ERR_EXISTING_ARGUMENT;  // Either key or short key already exists
+    }
 
     pmargp_argument_t *new_args = realloc(parser->args, (parser->argc + 1) * sizeof(pmargp_argument_t));
-    if (new_args == NULL) return 0x00;
+    if (new_args == NULL) {
+        free(adjusted_key);
+        if (adjusted_short_key) free(adjusted_short_key);
+        return PMARGP_ERR_MEMORY_ALLOCATION;
+    }
     parser->args = new_args;
 
     pmargp_argument_t *arg = &parser->args[parser->argc];
-    arg->key = strdup(key);
-    arg->short_key = short_key ? strdup(short_key) : NULL;
+    arg->key = adjusted_key;  
+    arg->short_key = adjusted_short_key;
     arg->description = description ? strdup(description) : NULL;
     arg->type = type;
     arg->required = required;
@@ -73,7 +139,8 @@ int add_argument(struct pmargp_parser_t* parser, const char* restrict short_key,
     arg->allocated = false;
 
     parser->argc++;
-    return 0x01;
+
+    return PMARGP_SUCCESS;
 }
 
 static bool help_info(int argc, char* argv[]) {
@@ -121,12 +188,13 @@ static void help(struct pmargp_parser_t *parser) {
     if(!parser) return;
     printf("\n%s\n", parser->name ? parser->name : "Program Name");
     printf("%s\n\n", parser->description ? parser->description : "No description provided.");
-    printf("Usage: %s [OPTIONS]\n\n", parser->name ? parser->name : "program");
+    printf("usage: %s [OPTIONS] \n\n", parser->name ? parser->name : "program");
+
     printf("Options:\n");
 
     int max_key_length = 0, max_short_key_length = 0;
     for (int i = 0; i < parser->argc; i++) {
-        int key_length = strlen(parser->args[i].key);
+        int key_length = parser->args[i].key ? strlen(parser->args[i].key) : 0;
         int short_key_length = parser->args[i].short_key ? strlen(parser->args[i].short_key) : 0;
         if (key_length > max_key_length) max_key_length = key_length;
         if (short_key_length > max_short_key_length) max_short_key_length = short_key_length;
@@ -135,12 +203,11 @@ static void help(struct pmargp_parser_t *parser) {
     for (int i = 0; i < parser->argc; i++) {
         const pmargp_argument_t *arg = &parser->args[i];
         printf("  %-*s  %-*s%-15s%s",
-               max_key_length + 2, arg->key,
+               max_key_length + 2, arg->key ? arg->key : "",
                max_short_key_length + 2, arg->short_key ? arg->short_key : "",
                type_to_token(arg->type),
                arg->description ? arg->description : "No description");
-        printf(" (Type: %s)", type_to_string(arg->type));
-        if (arg->required) printf(" [Required]");
+        printf(" (Type: %s) ", type_to_string(arg->type));
         if (arg->value_ptr) {
             switch (arg->type) {
                 case PMARGP_INT: printf("[Default: %d]", *(int*)arg->value_ptr); break;
@@ -151,6 +218,7 @@ static void help(struct pmargp_parser_t *parser) {
                 default: break;
             }
         }
+        if (arg->required) printf(" [Required] ");
         printf("\n");
     }
     printf("\n");
@@ -260,7 +328,10 @@ void free_parser(struct pmargp_parser_t *parser) {
     for (int j = 0; j < parser->argc; j++) {
         pmargp_argument_t *arg = &parser->args[j];
         free(arg->key);
-        free(arg->short_key);
+
+        if (arg->short_key != NULL){
+            free(arg->short_key);
+        }
         free(arg->description);
     }
     free(parser->args);
