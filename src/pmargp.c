@@ -6,7 +6,8 @@
 #include <limits.h>
 #include <regex.h>
 
-#if  defined(__STDC_VERSION__) && __STDC_VERSION__ < 200112L
+#if  !defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE < 200112L
+// Code for when POSIX 2001 is not available
 char* strdup(const char* s) {
     if (!s) return NULL;
     size_t len = strlen(s) + 1;
@@ -17,6 +18,7 @@ char* strdup(const char* s) {
     return copy;
 }
 #endif
+
 #define LARGE_KEY_REGEX "^--[A-Za-z0-9]+([_-]?[A-Za-z0-9]+)*$"
 #define SHORT_KEY_REGEX "^-[A-Za-z]$"
 
