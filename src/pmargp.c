@@ -327,12 +327,9 @@ void free_parser(struct pmargp_parser_t *parser) {
 
     for (int j = 0; j < parser->argc; j++) {
         pmargp_argument_t *arg = &parser->args[j];
-        free(arg->key);
-
-        if (arg->short_key != NULL){
-            free(arg->short_key);
-        }
-        free(arg->description);
+        if (arg->key != NULL) free(arg->key);
+        if (arg->short_key != NULL) free(arg->short_key);
+        if (arg->description != NULL) free(arg->description);
     }
     free(parser->args);
     parser->args = NULL;
