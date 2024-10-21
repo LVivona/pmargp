@@ -114,12 +114,12 @@ int main(int argc, char *argv[]) {
 
     if (fp != NULL){
         printf("Bee Movie\n\n");
-        char * line;
-        size_t len;
-        int i = 0;
-        while ((line = fgetln(fp, &len)) && i < 10){
-            fwrite(line, len, 1, output);
-            i++;
+        char c;
+        int len = 0;
+        while ((c = fgetc(fp)) && len < 10){
+            fwrite(&c, 1, 1, output);
+            if(c == '\n') len++;
+            
         }
             
     }
