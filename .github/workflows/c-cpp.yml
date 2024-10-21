@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        standard: [c99, c11, c17, c23]
+        standard: [c99, c11, c17, c2x]
     steps:
     - uses: actions/checkout@v4
     - name: Make bash script executable
