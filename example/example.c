@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
     float value;
     bool quiet = false;
     FILE *output = stdout;
+    FILE *fp = NULL;
     char character;
     int error;
     /**
@@ -39,6 +40,7 @@ int main(int argc, char *argv[]) {
      */
     add_argument(&parser, NULL, "--quiet", PMARGP_BOOL, &quiet, "Run in quiet mode", false);
     add_argument(&parser, "-o", "--output", PMARGP_W_FILE, &output, "Output file", false);
+    add_argument(&parser, "-f", NULL, PMARGP_R_FILE, &fp, "input file", true);
     add_argument(&parser, "-r", "--character", PMARGP_CHAR, &character, "random character", false);
 
     // Parse arguments
@@ -59,6 +61,7 @@ int main(int argc, char *argv[]) {
     pmargp_argument_t *quiet_arg = parser.get_argument(&parser, "--quiet");
     pmargp_argument_t *output_arg = parser.get_argument(&parser, "--output");
     pmargp_argument_t *char_arg = parser.get_argument(&parser, "--character");
+    pmargp_argument_t *file_arg = parser.get_argument(&parser, "-f");
 
 
     /**
@@ -80,6 +83,7 @@ int main(int argc, char *argv[]) {
     printf("Address of quiet:  %p\n", (void*)&quiet);
     printf("Address of output: %p\n", (void*)&output);
     printf("Address of character: %p\n", (void*)&character);
+    printf("Address of file pointer: %p\n", (void*)&fp);
 
     /**
      * this just assures that the value ptr is pointing to the stack
@@ -91,14 +95,15 @@ int main(int argc, char *argv[]) {
     assert(&quiet == quiet_arg->value_ptr);
     assert(&output == output_arg->value_ptr);
     assert(&character == char_arg->value_ptr);
+    assert(&fp == file_arg->value_ptr);
+    
 
     printf("quite: %d\n", quiet);
     printf("count: %d\n", count);
 
     // Use the parsed values
     if (!quiet) {
-
-        if (-1 == (long long)count){
+        if (-1 == (long int)count){
              fprintf(output, "I can't print that much\n");
         } else {
             for (int i = 0; i < count; i++) {
@@ -107,9 +112,26 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if (fp != NULL){
+        printf("Bee Movie\n\n");
+        char * line;
+        size_t len;
+        int i = 0;
+        while ((line = fgetln(fp, &len)) && i < 10){
+            fwrite(line, len, 1, output);
+            i++;
+        }
+            
+    }
+
+
     // Clean up
     if (output != stdout) {
         fclose(output);
+    }
+
+    if (fp != NULL){
+        fclose(fp);
     }
 
     free_parser(&parser);
