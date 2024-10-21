@@ -54,7 +54,6 @@ int get_argument_index(struct pmargp_parser_t* parser, const char *key) {
         return -1;
     }
 
-    // 
     for (int i = 0; i < parser->argc; i++) {
         if (PMARGS_IS_VALID_KEY(parser, key)) {
             return i;
@@ -216,7 +215,7 @@ static void help(struct pmargp_parser_t *parser) {
                 case PMARGP_FLOAT: printf("[Default: %.2f]", *(float*)arg->value_ptr); break;
                 case PMARGP_BOOL: printf("[Default: %s]", *(bool*)arg->value_ptr ? "true" : "false"); break;
                 case PMARGP_STRING: printf("[Default: %s]", strlen(*(char**)arg->value_ptr) > 0 ?  *(char**)arg->value_ptr : "None"  ); break;
-                case PMARGP_CHAR: printf("[Default: %s]", (char *)arg->value_ptr ); break;
+                case PMARGP_CHAR: printf("[Default: %s]", strlen((char *)arg->value_ptr) > 0 ? (char *)arg->value_ptr : "None" ); break;
                 default: break;
             }
         }
