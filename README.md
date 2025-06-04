@@ -181,8 +181,4 @@ if you wish to add your own test you can follow the test I provided, and extend 
 names to the run_group similar to the others. 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-This version refines the layout, introduces consistent styling, and improves clarity, maintaining a professional tone throughout.
+[MIT](LICENSE)
